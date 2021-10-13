@@ -84,7 +84,8 @@ class FetchCollection(View):
                 self.all_characters.extend(result)
 
     def transform_and_write_to_csv(self):
-        self.filename = f'{FetchCollection.DOWNLOAD_DIRECTORY}/{str(uuid.uuid4())}.csv'
+        self.filename = f'{str(uuid.uuid4())}.csv'
+        save_to = f'{FetchCollection.DOWNLOAD_DIRECTORY}/{self.filename}'
 
         header = [list(self.all_characters[0].keys())]
         values = [list(character.values()) for character in self.all_characters]
@@ -97,4 +98,4 @@ class FetchCollection(View):
             .addcolumn('homeworld', self.resolved_homeworld, index=8) \
             .addfield('date', lambda row: self.convert_to_date(row['edited'])) \
             .cutout('films', 'species', 'vehicles', 'starships', 'created', 'edited', 'url') \
-            .tocsv(self.filename)
+            .tocsv(save_to)
