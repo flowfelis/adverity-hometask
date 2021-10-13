@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Star Wars Explorer</title>
+</head>
+<body>
+<h1>Star Wars Explorer</h1>
+<h2>Collections</h2>
+<button>Fetch</button>
+<ul>
+  {% for collection in object_list %}
+      <li>{{ collection.filename }} - {{ collection.date_added }}</li>
+  {% empty %}
+    <li>No collection yet.</li>
+  {% endfor %}
+</ul>
+</body>
+</html>
