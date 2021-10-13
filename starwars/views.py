@@ -72,13 +72,13 @@ class FetchCollection(View):
     def write_metadata_to_db(self):
         Collection.objects.create(filename=self.filename)
 
-    def total_page_number(self):
+    def page_numbers(self):
         resp = requests.get(FetchCollection.URL)
         total_item = resp.json().get('count')
         total_page_number = total_item // FetchCollection.ITEM_PER_PAGE \
             if total_item % FetchCollection.ITEM_PER_PAGE == 0 \
             else total_item // FetchCollection.ITEM_PER_PAGE + 1
-        return total_page_number
+        return range(1, total_page_number + 1)
 
     def convert_to_date(self, raw_date):
         d = datetime.datetime.strptime(raw_date[:raw_date.find('T')], '%Y-%m-%d')
