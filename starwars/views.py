@@ -1,3 +1,4 @@
+import requests
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views import View
@@ -27,10 +28,20 @@ class CollectionDetailView(DetailView):
 
 class FetchCollection(View):
     http_method_names = ['get']
+    URL = 'https://swapi.dev/api/people'
+    ITEM_PER_PAGE = 10
 
     def get(self, request, *args, **kwargs):
         self.fetch_collection()
         return HttpResponseRedirect(reverse('collection-list'))
+
+    def total_page_number(self):
+        resp = requests.get(FetchCollection.URL)
+        total_item = resp.json().get('count')
+        total_page_number = total_item // FetchCollection.ITEM_PER_PAGE \
+            if total_item % FetchCollection.ITEM_PER_PAGE == 0 \
+            else total_item // FetchCollection.ITEM_PER_PAGE + 1
+        return total_page_number
 
     def fetch_collection(self):
         # there is one extra request being made for only fetching "count" number.
