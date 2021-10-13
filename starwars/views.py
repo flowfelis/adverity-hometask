@@ -38,6 +38,32 @@ class FetchCollection(View):
     ITEM_PER_PAGE = 10
     DOWNLOAD_DIRECTORY = 'files'
 
+    def write_metadata_to_db(self):
+        Collection.objects.create(filename=self.filename)
+
+    def page_numbers(self):
+        resp = requests.get(FetchCollection.URL)
+        total_item = resp.json().get('count')
+        total_page_number = total_item // FetchCollection.ITEM_PER_PAGE \
+            if total_item % FetchCollection.ITEM_PER_PAGE == 0 \
+            else total_item // FetchCollection.ITEM_PER_PAGE + 1
+        return range(1, total_page_number + 1)
+
+    def convert_to_date(self, raw_date):
+        d = datetime.datetime.strptime(raw_date[:raw_date.find('T')], '%Y-%m-%d')
+        return str(d.date())
+
+    def fetch_homeworld(self, planet_url):
+        resp = requests.get(planet_url)
+        data = resp.json()
+        return data['name']
+
+    def resolve_homeworld(self, planet_urls):
+        with ThreadPoolExecutor() as executor:
+            results = executor.map(self.fetch_homeworld, planet_urls)
+
+            self.resolved_homeworld = [result for result in results]
+
     def get(self, request, *args, **kwargs):
         self.fetch_characters_from_api()
         self.transform_and_write_to_csv()
@@ -64,27 +90,11 @@ class FetchCollection(View):
         values = [list(character.values()) for character in self.all_characters]
         table = header + values
 
-        etl.addfield(table, 'date', lambda row: self.convert_to_date(row['edited'])) \
-            .convert('homeworld', lambda value: self.resolve_homeworld(value)) \
+        planet_urls = list(etl.values(table, 'homeworld'))
+        self.resolve_homeworld(planet_urls)
+
+        etl.cutout(table, 'homeworld') \
+            .addcolumn('homeworld', self.resolved_homeworld, index=8) \
+            .addfield('date', lambda row: self.convert_to_date(row['edited'])) \
             .cutout('films', 'species', 'vehicles', 'starships', 'created', 'edited', 'url') \
             .tocsv(self.filename)
-
-    def write_metadata_to_db(self):
-        Collection.objects.create(filename=self.filename)
-
-    def page_numbers(self):
-        resp = requests.get(FetchCollection.URL)
-        total_item = resp.json().get('count')
-        total_page_number = total_item // FetchCollection.ITEM_PER_PAGE \
-            if total_item % FetchCollection.ITEM_PER_PAGE == 0 \
-            else total_item // FetchCollection.ITEM_PER_PAGE + 1
-        return range(1, total_page_number + 1)
-
-    def convert_to_date(self, raw_date):
-        d = datetime.datetime.strptime(raw_date[:raw_date.find('T')], '%Y-%m-%d')
-        return str(d.date())
-
-    def resolve_homeworld(self, planet_url):
-        resp = requests.get(planet_url)
-        data = resp.json()
-        return data['name']
