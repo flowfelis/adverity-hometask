@@ -1,27 +1,23 @@
-from django.shortcuts import render
-from django.views import View
+from django.views.generic import DetailView
 from django.views.generic import ListView
 
 from starwars.models import Collection
 
 
 class CollectionListView(ListView):
+    http_method_names = ['get']
     model = Collection
 
 
-class CollectionsDetailView(View):
-    def get(self, request, *args, **kwargs):
-        # get query params
-        # if there is a query param = 'fetch':
-        #   self.fetch_collection()
+class CollectionsDetailView(DetailView):
+    http_method_names = ['get']
+    model = Collection
+
+    def render_to_response(self, context, **response_kwargs):
+        # context.get('collection').filename
         # read from csv
-        return render(
-            request,
-            'starwars/collection_list.html',
-            context={
-                'name': 'Alican',
-            },
-        )
+        # update context with csv content
+        return super().render_to_response(context, **response_kwargs)
 
     def fetch_collection(self):
         # there is one extra request being made for only fetching "count" number.

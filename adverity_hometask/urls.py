@@ -21,4 +21,5 @@ from starwars import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.CollectionListView.as_view(), name='collection-list'),
+    path('collection/<int:pk>/', views.CollectionsDetailView.as_view(), name='collection-detail'),
 ]

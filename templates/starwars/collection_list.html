@@ -10,9 +10,9 @@
 <button>Fetch</button>
 <ul>
   {% for collection in object_list %}
-      <li>{{ collection.filename }} - {{ collection.date_added }}</li>
+      <li><a href="/collection/{{ collection.id }}/">{{ collection.date_added }}</a></li>
   {% empty %}
-    <li>No collection yet.</li>
+    <h3>No collection yet.</h3>
   {% endfor %}
 </ul>
 </body>
