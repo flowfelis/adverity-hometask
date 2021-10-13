@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import petl as etl
 import requests
+from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views import View
@@ -28,9 +29,27 @@ class CollectionDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         file_location = f'{DOWNLOAD_DIRECTORY}/{context.get("collection").filename}'
-        table = etl.fromcsv(file_location)
-        context['table'] = list(table)
+        table = list(etl.fromcsv(file_location))
+        headers = table[0]
+        values = table[1:]
+
+        next_page_number = int(self.request.GET.get('page') or 0) + 1
+        rows_per_page = next_page_number * ITEM_PER_PAGE
+        has_next = True
+        total_item = len(values)
+        total_page_number = total_item // ITEM_PER_PAGE \
+            if total_item % ITEM_PER_PAGE == 0 \
+            else total_item // ITEM_PER_PAGE + 1
+        if next_page_number >= total_page_number:
+            has_next = False
+
+        context['headers'] = headers
+        context['values'] = values[:rows_per_page]
+        context['has_next'] = has_next
+        context['next_page_number'] = next_page_number
+
         return context
 
 
