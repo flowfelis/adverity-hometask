@@ -9,7 +9,7 @@ class CollectionListView(ListView):
     model = Collection
 
 
-class CollectionsDetailView(DetailView):
+class CollectionDetailView(DetailView):
     http_method_names = ['get']
     model = Collection
 
