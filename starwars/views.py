@@ -1,5 +1,6 @@
 import datetime
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 
 import petl as etl
 import requests
@@ -43,14 +44,18 @@ class FetchCollection(View):
         self.write_metadata_to_db()
         return HttpResponseRedirect(reverse('collection-list'))
 
+    def fetch_from_api(self, page_number):
+        resp = requests.get(f'{FetchCollection.URL}/?page={page_number}')
+        data = resp.json()
+        return data.get('results')
+
     def fetch_characters_from_api(self):
         self.all_characters = []
-        for page_number in range(1, self.total_page_number() + 1):
-            # Fetch raw data
-            resp = requests.get(f'{FetchCollection.URL}/?page={page_number}')
-            data = resp.json()
-            some_characters = data.get('results')
-            self.all_characters.extend(some_characters)
+        with ThreadPoolExecutor() as executor:
+            results = executor.map(self.fetch_from_api, self.page_numbers())
+
+            for result in results:
+                self.all_characters.extend(result)
 
     def transform_and_write_to_csv(self):
         self.filename = f'{FetchCollection.DOWNLOAD_DIRECTORY}/{str(uuid.uuid4())}.csv'
