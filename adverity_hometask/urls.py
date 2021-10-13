@@ -22,4 +22,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.CollectionListView.as_view(), name='collection-list'),
     path('collection/<int:pk>/', views.CollectionDetailView.as_view(), name='collection-detail'),
+    path('fetch/', views.FetchCollection.as_view(), name='fetch'),
 ]

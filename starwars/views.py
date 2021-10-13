@@ -1,3 +1,6 @@
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+from django.views import View
 from django.views.generic import DetailView
 from django.views.generic import ListView
 
@@ -14,10 +17,20 @@ class CollectionDetailView(DetailView):
     model = Collection
 
     def render_to_response(self, context, **response_kwargs):
-        # context.get('collection').filename
+        filename = context.get('collection').filename
         # read from csv
+        # with open(filename) as f:
+        #     pass
         # update context with csv content
         return super().render_to_response(context, **response_kwargs)
+
+
+class FetchCollection(View):
+    http_method_names = ['get']
+
+    def get(self, request, *args, **kwargs):
+        self.fetch_collection()
+        return HttpResponseRedirect(reverse('collection-list'))
 
     def fetch_collection(self):
         # there is one extra request being made for only fetching "count" number.
