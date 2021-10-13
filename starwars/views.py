@@ -40,6 +40,7 @@ class FetchCollection(View):
     def get(self, request, *args, **kwargs):
         self.fetch_characters_from_api()
         self.transform_and_write_to_csv()
+        self.write_metadata_to_db()
         return HttpResponseRedirect(reverse('collection-list'))
 
     def fetch_characters_from_api(self):
@@ -52,7 +53,7 @@ class FetchCollection(View):
             self.all_characters.extend(some_characters)
 
     def transform_and_write_to_csv(self):
-        filename = f'{FetchCollection.DOWNLOAD_DIRECTORY}/{str(uuid.uuid4())}.csv'
+        self.filename = f'{FetchCollection.DOWNLOAD_DIRECTORY}/{str(uuid.uuid4())}.csv'
 
         header = [list(self.all_characters[0].keys())]
         values = [list(character.values()) for character in self.all_characters]
@@ -61,7 +62,10 @@ class FetchCollection(View):
         etl.addfield(table, 'date', lambda row: self.convert_to_date(row['edited'])) \
             .convert('homeworld', lambda value: self.resolve_homeworld(value)) \
             .cutout('films', 'species', 'vehicles', 'starships', 'created', 'edited', 'url') \
-            .tocsv(filename)
+            .tocsv(self.filename)
+
+    def write_metadata_to_db(self):
+        Collection.objects.create(filename=self.filename)
 
     def total_page_number(self):
         resp = requests.get(FetchCollection.URL)
