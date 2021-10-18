@@ -83,7 +83,7 @@ class CollectionDetailView(DetailView):
         return self.render_to_response(context=context)
 
 
-class FetchCollection(View):
+class FetchCollectionView(View):
     http_method_names = ['get']
 
     def write_metadata_to_db(self):
