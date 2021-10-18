@@ -17,7 +17,14 @@
     <h2>Collections</h2>
   </div>
   <div class="col-2">
-    <a class="btn btn-primary" href="/fetch/">Fetch</a>
+    <a
+        class="btn btn-primary"
+        href="/fetch/"
+        onclick="addSpinner(this)"
+    >
+      <span id="spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+      <span id="fetchText">Fetch</span>
+    </a>
   </div>
 </div>
 
@@ -30,6 +37,17 @@
     {% endfor %}
   </ul>
 </div>
+
+<script>
+  function addSpinner(this_) {
+    const spinner = document.getElementById('spinner');
+    spinner.classList.remove('d-none');
+
+    const fetchText = document.getElementById('fetchText');
+    fetchText.innerText = 'Fetching...';
+    this_.classList.add('disabled');
+  }
+</script>
 
 </body>
 </html>
