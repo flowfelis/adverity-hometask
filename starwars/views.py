@@ -55,7 +55,7 @@ class CollectionDetailView(DetailView):
         return context
 
     def post(self, request, *args, **kwargs):
-        """Post method is used for value count when checking a header name"""
+        """Post method is used for value count when clicking a header name"""
         self.object = self.get_object()
         context = super().get_context_data(**kwargs)
         headers, _, table = self.get_from_file(context)
