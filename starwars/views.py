@@ -27,7 +27,7 @@ class CollectionDetailView(DetailView):
     model = Collection
 
     def get_from_file(self, context):
-        """return headers and values from csv file"""
+        """return headers, values and table from csv file"""
         file_location = f'{DOWNLOAD_DIRECTORY}/{context.get("collection").filename}'
         table = list(etl.fromcsv(file_location))
         return table[0], table[1:], table
@@ -55,6 +55,7 @@ class CollectionDetailView(DetailView):
         return context
 
     def post(self, request, *args, **kwargs):
+        """Post method is used for value count when checking a header name"""
         self.object = self.get_object()
         context = super().get_context_data(**kwargs)
         headers, _, table = self.get_from_file(context)
