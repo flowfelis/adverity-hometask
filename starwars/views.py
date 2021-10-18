@@ -26,13 +26,15 @@ class CollectionDetailView(DetailView):
     http_method_names = ['get']
     model = Collection
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
+    def get_from_file(self, context):
+        """return headers and values"""
         file_location = f'{DOWNLOAD_DIRECTORY}/{context.get("collection").filename}'
         table = list(etl.fromcsv(file_location))
-        headers = table[0]
-        values = table[1:]
+        return table[0], table[1:]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        headers, values = self.get_from_file(context)
 
         next_page_number = int(self.request.GET.get('page') or 0) + 1
         rows_per_page = next_page_number * ITEM_PER_PAGE
