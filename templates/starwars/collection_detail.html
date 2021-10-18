@@ -11,6 +11,14 @@
 </head>
 <body class="container-fluid">
 <h3>{{ object.filename }}</h3>
+
+<div class="btn-group btn-group-sm my-2" role="group" aria-label="Value count button group">
+  {% for header in headers %}
+    <input type="checkbox" class="btn-check" id="{{ header }}" autocomplete="off">
+    <label class="btn btn-outline-primary" for="{{ header }}">{{ header }}</label>
+  {% endfor %}
+</div>
+
 <table class="table table-striped">
   <thead>
   <tr>
