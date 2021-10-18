@@ -12,12 +12,22 @@
 <body class="container-fluid">
 <h3>{{ object.filename }}</h3>
 
-<div class="btn-group btn-group-sm my-2" role="group" aria-label="Value count button group">
-  {% for header in headers %}
-    <input type="checkbox" class="btn-check" id="{{ header }}" autocomplete="off">
-    <label class="btn btn-outline-primary" for="{{ header }}">{{ header }}</label>
-  {% endfor %}
-</div>
+<form action="" method="post">
+  {% csrf_token %}
+  <div class="btn-group btn-group-sm my-2" role="group" aria-label="Value count button group">
+    {% for header in headers %}
+      <input
+          type="checkbox"
+          name="{{ header }}"
+          class="btn-check"
+          id="{{ header }}"
+          {% if header in checked_headers %} checked {% endif %}
+          onclick="this.form.submit()"
+      >
+      <label class="btn btn-outline-primary" for="{{ header }}">{{ header }}</label>
+    {% endfor %}
+  </div>
+</form>
 
 <table class="table table-striped">
   <thead>

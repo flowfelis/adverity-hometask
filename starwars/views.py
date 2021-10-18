@@ -23,11 +23,11 @@ class CollectionListView(ListView):
 
 
 class CollectionDetailView(DetailView):
-    http_method_names = ['get']
+    http_method_names = ['get', 'post']
     model = Collection
 
     def get_from_file(self, context):
-        """return headers and values"""
+        """return headers and values from csv file"""
         file_location = f'{DOWNLOAD_DIRECTORY}/{context.get("collection").filename}'
         table = list(etl.fromcsv(file_location))
         return table[0], table[1:]
@@ -52,6 +52,20 @@ class CollectionDetailView(DetailView):
         context['next_page_number'] = next_page_number
 
         return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = super().get_context_data(**kwargs)
+        headers, values = self.get_from_file(context)
+
+        # filter out csrf_token from request POST body
+        checked_headers = [header for header in request.POST.keys() if header != 'csrfmiddlewaretoken']
+
+        context['headers'] = headers
+        context['values'] = values
+        context['checked_headers'] = checked_headers
+
+        return self.render_to_response(context=context)
 
 
 class FetchCollection(View):
