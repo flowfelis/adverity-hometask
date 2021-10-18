@@ -30,11 +30,11 @@ class CollectionDetailView(DetailView):
         """return headers and values from csv file"""
         file_location = f'{DOWNLOAD_DIRECTORY}/{context.get("collection").filename}'
         table = list(etl.fromcsv(file_location))
-        return table[0], table[1:]
+        return table[0], table[1:], table
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        headers, values = self.get_from_file(context)
+        headers, values, _ = self.get_from_file(context)
 
         next_page_number = int(self.request.GET.get('page') or 0) + 1
         rows_per_page = next_page_number * ITEM_PER_PAGE
@@ -47,6 +47,7 @@ class CollectionDetailView(DetailView):
             has_next = False
 
         context['headers'] = headers
+        context['headers_for_value_count'] = headers
         context['values'] = values[:rows_per_page]
         context['has_next'] = has_next
         context['next_page_number'] = next_page_number
@@ -56,13 +57,26 @@ class CollectionDetailView(DetailView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         context = super().get_context_data(**kwargs)
-        headers, values = self.get_from_file(context)
+        headers, _, table = self.get_from_file(context)
 
         # filter out csrf_token from request POST body
         checked_headers = [header for header in request.POST.keys() if header != 'csrfmiddlewaretoken']
 
-        context['headers'] = headers
-        context['values'] = values
+        try:
+            values_count = etl.valuecounter(table, *checked_headers)
+        except AssertionError:
+            # All headers are unchecked, so show all headers
+            return HttpResponseRedirect(reverse('collection-detail', args=[kwargs['pk']]))
+
+        # If only one header is checked, encapsulate in a list
+        values = [[val] if type(val) == str else val for val in values_count.keys()]
+
+        value_count_table = [checked_headers] + values
+        value_count_table = etl.addcolumn(value_count_table, 'count', values_count.values())
+
+        context['headers_for_value_count'] = headers
+        context['headers'] = value_count_table[0]
+        context['values'] = value_count_table[1:]
         context['checked_headers'] = checked_headers
 
         return self.render_to_response(context=context)

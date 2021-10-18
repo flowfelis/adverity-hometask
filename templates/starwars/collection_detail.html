@@ -15,7 +15,7 @@
 <form action="" method="post">
   {% csrf_token %}
   <div class="btn-group btn-group-sm my-2" role="group" aria-label="Value count button group">
-    {% for header in headers %}
+    {% for header in headers_for_value_count %}
       <input
           type="checkbox"
           name="{{ header }}"
