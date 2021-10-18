@@ -4,7 +4,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 import petl as etl
 import requests
-from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views import View
