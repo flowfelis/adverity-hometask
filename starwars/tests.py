@@ -3,6 +3,7 @@ import os
 from unittest.mock import Mock
 from unittest.mock import patch
 
+import requests
 from django.test import TestCase
 from django.urls import reverse
 
@@ -14,8 +15,13 @@ class FetchCollectionViewTests(TestCase):
     def setUp(self):
         self.instance = views.FetchCollectionView()
 
-    def test_api(self):
-        pass
+    def test_api_is_alive(self):
+        url = 'https://swapi.dev/api/people'
+        resp = requests.get(url)
+        self.assertEqual(
+            http.HTTPStatus.OK,
+            resp.status_code,
+        )
 
     def test_write_metadata_to_db(self):
         self.instance.filename = 'dummy-filename'
