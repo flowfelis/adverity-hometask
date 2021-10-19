@@ -18,6 +18,7 @@ class FetchCollectionViewTests(TestCase):
     def test_api_is_alive(self):
         url = 'https://swapi.dev/api/people'
         resp = requests.get(url)
+
         self.assertEqual(
             http.HTTPStatus.OK,
             resp.status_code,
@@ -35,7 +36,6 @@ class FetchCollectionViewTests(TestCase):
     def test_page_numbers(self, mocked_get):
         mocked_get.return_value = Mock(ok=True)
         mocked_get.return_value.json.return_value = {'count': 82}
-
         page_numbers = self.instance._page_numbers()
 
         self.assertEqual(
@@ -68,9 +68,10 @@ class FetchCollectionViewTests(TestCase):
             self,
             mocked_write_metadata_to_db,
             mocked_transform_and_write_to_csv,
-            mocked_fetch_from_api_thread_wrapper,
+            mocked_fetch_from_api_with_thread,
     ):
         resp = self.client.get(reverse('fetch'))
+
         self.assertEqual(
             http.HTTPStatus.FOUND,
             resp.status_code,
@@ -111,8 +112,8 @@ class FetchCollectionViewTests(TestCase):
         ]
         self.instance.resolved_homeworld = ['Naboo']
         self.instance._transform_and_write_to_csv()
-
         test_filepath = f'files/{self.instance.filename}'
+
         self.assertTrue(
             os.path.isfile(test_filepath)
         )
