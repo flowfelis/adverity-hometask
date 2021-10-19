@@ -7,8 +7,9 @@ Have "load more" and "value count" functionality.
 
 ## Extra Functionality Made
 
-Show a spinner with a word "fetching..." after clicking the "fetch" button.
-For an instant visual representation to the user.
+After clicking the "fetch" button;
+show a spinner with a word "fetching..." and disable the button
+for an instant visual representation to the user.
 
 ## Possible Further Improvements
 
