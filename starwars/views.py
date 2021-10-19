@@ -106,14 +106,14 @@ class FetchCollectionView(View):
         data = resp.json()
         return data['name']
 
-    def _fetch_homeworld_thread_wrapper(self, planet_urls):
+    def _fetch_homeworld_with_thread(self, planet_urls):
         with ThreadPoolExecutor() as executor:
             results = executor.map(self._fetch_homeworld, planet_urls)
 
             self.resolved_homeworld = list(results)
 
     def get(self, request, *args, **kwargs):
-        self._fetch_from_api_thread_wrapper()
+        self._fetch_from_api_with_thread()
         self._transform_and_write_to_csv()
         self._write_metadata_to_db()
         return HttpResponseRedirect(reverse('collection-list'))
@@ -123,7 +123,7 @@ class FetchCollectionView(View):
         data = resp.json()
         return data.get('results')
 
-    def _fetch_from_api_thread_wrapper(self):
+    def _fetch_from_api_with_thread(self):
         self.all_characters = []
         with ThreadPoolExecutor() as executor:
             results = executor.map(self._fetch_from_api, self._page_numbers())
@@ -140,7 +140,7 @@ class FetchCollectionView(View):
         table = header + values
 
         planet_urls = list(etl.values(table, 'homeworld'))
-        self._fetch_homeworld_thread_wrapper(planet_urls)
+        self._fetch_homeworld_with_thread(planet_urls)
 
         etl.cutout(table, 'homeworld') \
             .addcolumn('homeworld', self.resolved_homeworld, index=8) \
