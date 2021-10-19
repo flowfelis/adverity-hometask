@@ -26,7 +26,7 @@ class CollectionDetailView(DetailView):
     http_method_names = ['get', 'post']
     model = Collection
 
-    def get_from_file(self, context):
+    def _get_from_file(self, context):
         """return headers, values and table from csv file"""
         file_location = f'{DOWNLOAD_DIRECTORY}/{context.get("collection").filename}'
         table = list(etl.fromcsv(file_location))
@@ -34,7 +34,7 @@ class CollectionDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        headers, values, _ = self.get_from_file(context)
+        headers, values, _ = self._get_from_file(context)
 
         next_page_number = int(self.request.GET.get('page') or 0) + 1
         rows_per_page = next_page_number * ITEM_PER_PAGE
@@ -58,7 +58,7 @@ class CollectionDetailView(DetailView):
         """Post method is used for value count when clicking a header name"""
         self.object = self.get_object()
         context = super().get_context_data(**kwargs)
-        headers, _, table = self.get_from_file(context)
+        headers, _, table = self._get_from_file(context)
 
         # filter out csrf_token from request POST body
         checked_headers = [header for header in request.POST.keys() if header != 'csrfmiddlewaretoken']
@@ -86,10 +86,10 @@ class CollectionDetailView(DetailView):
 class FetchCollectionView(View):
     http_method_names = ['get']
 
-    def write_metadata_to_db(self):
+    def _write_metadata_to_db(self):
         Collection.objects.create(filename=self.filename)
 
-    def page_numbers(self):
+    def _page_numbers(self):
         resp = requests.get(URL)
         total_item = resp.json().get('count')
         total_page_number = total_item // ITEM_PER_PAGE \
@@ -97,41 +97,41 @@ class FetchCollectionView(View):
             else total_item // ITEM_PER_PAGE + 1
         return range(1, total_page_number + 1)
 
-    def convert_to_date(self, raw_date):
+    def _convert_to_date(self, raw_date):
         d = datetime.datetime.strptime(raw_date[:raw_date.find('T')], '%Y-%m-%d')
         return str(d.date())
 
-    def fetch_homeworld(self, planet_url):
+    def _fetch_homeworld(self, planet_url):
         resp = requests.get(planet_url)
         data = resp.json()
         return data['name']
 
-    def resolve_homeworld(self, planet_urls):
+    def _fetch_homeworld_thread_wrapper(self, planet_urls):
         with ThreadPoolExecutor() as executor:
-            results = executor.map(self.fetch_homeworld, planet_urls)
+            results = executor.map(self._fetch_homeworld, planet_urls)
 
-            self.resolved_homeworld = [result for result in results]
+            self.resolved_homeworld = list(results)
 
     def get(self, request, *args, **kwargs):
-        self.fetch_characters_from_api()
-        self.transform_and_write_to_csv()
-        self.write_metadata_to_db()
+        self._fetch_from_api_thread_wrapper()
+        self._transform_and_write_to_csv()
+        self._write_metadata_to_db()
         return HttpResponseRedirect(reverse('collection-list'))
 
-    def fetch_from_api(self, page_number):
+    def _fetch_from_api(self, page_number):
         resp = requests.get(f'{URL}/?page={page_number}')
         data = resp.json()
         return data.get('results')
 
-    def fetch_characters_from_api(self):
+    def _fetch_from_api_thread_wrapper(self):
         self.all_characters = []
         with ThreadPoolExecutor() as executor:
-            results = executor.map(self.fetch_from_api, self.page_numbers())
+            results = executor.map(self._fetch_from_api, self._page_numbers())
 
             for result in results:
                 self.all_characters.extend(result)
 
-    def transform_and_write_to_csv(self):
+    def _transform_and_write_to_csv(self):
         self.filename = f'{str(uuid.uuid4())}.csv'
         file_location = f'{DOWNLOAD_DIRECTORY}/{self.filename}'
 
@@ -140,10 +140,10 @@ class FetchCollectionView(View):
         table = header + values
 
         planet_urls = list(etl.values(table, 'homeworld'))
-        self.resolve_homeworld(planet_urls)
+        self._fetch_homeworld_thread_wrapper(planet_urls)
 
         etl.cutout(table, 'homeworld') \
             .addcolumn('homeworld', self.resolved_homeworld, index=8) \
-            .addfield('date', lambda row: self.convert_to_date(row['edited'])) \
+            .addfield('date', lambda row: self._convert_to_date(row['edited'])) \
             .cutout('films', 'species', 'vehicles', 'starships', 'created', 'edited', 'url') \
             .tocsv(file_location)
