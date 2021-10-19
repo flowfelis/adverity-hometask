@@ -13,4 +13,5 @@ for an instant visual representation to the user.
 
 ## Possible Further Improvements
 
-Delete functionality for a collection
+- Delete functionality for a collection
+- "Show Less" functionality
