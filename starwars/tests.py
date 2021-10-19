@@ -33,11 +33,10 @@ class FetchCollectionViewTests(TestCase):
         )
 
     def test_convert_to_date(self):
-        now = datetime.datetime.now()
-        timestamp = now.timestamp()
+        raw_date = '2014-12-20T21:17:56.891000Z'
 
         self.assertEqual(
-            str(now.date()),
-            self.instance.convert_to_date(timestamp),
+            '2014-12-20',
+            self.instance.convert_to_date(raw_date),
         )
 

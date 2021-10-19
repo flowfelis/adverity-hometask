@@ -97,8 +97,9 @@ class FetchCollectionView(View):
             else total_item // ITEM_PER_PAGE + 1
         return range(1, total_page_number + 1)
 
-    def convert_to_date(self, timestamp):
-        return str(datetime.date.fromtimestamp(timestamp))
+    def convert_to_date(self, raw_date):
+        d = datetime.datetime.strptime(raw_date[:raw_date.find('T')], '%Y-%m-%d')
+        return str(d.date())
 
     def fetch_homeworld(self, planet_url):
         resp = requests.get(planet_url)
